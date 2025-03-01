@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract UniversityCertificate is ERC721, Ownable {
+contract SBT is ERC721, Ownable {
     struct Certificate {
         bool exists;
         bool approved;
@@ -15,7 +15,7 @@ contract UniversityCertificate is ERC721, Ownable {
 
     uint256 private _tokenIdCounter;
 
-    constructor() ERC721("UniversityCertificate", "UNI") {}
+    constructor(address initialOwner) ERC721("UniversityCertificate", "UNI") Ownable(initialOwner) {}
 
     function mint(address student) external onlyOwner {
         uint256 tokenId = _tokenIdCounter;
@@ -50,9 +50,23 @@ contract UniversityCertificate is ERC721, Ownable {
         }
     }
 
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual override {
-        require(from == address(0) || to == address(0), "SBT cannot be transferred");
-        super._beforeTokenTransfer(from, to, tokenId);
+    function _update(address to, uint256 tokenId, address auth) internal virtual override returns (address) {
+        address from = _ownerOf(tokenId); // Fetch the current owner
+
+        // Enforce soulbound restriction: Only minting (from == address(0)) or burning (to == address(0)) is allowed
+        require(from == address(0) || to == address(0), "Soulbound: Transfer not allowed");
+
+        // Perform (optional) operator check
+        if (auth != address(0)) {
+            _checkAuthorized(from, auth, tokenId);
+        }
+
+        // Clear approval if the token is being burned
+        if (from != address(0)) {
+            _approve(address(0), tokenId, address(0), false);
+        }
+
+        return super._update(to, tokenId, auth);
     }
 
     function studentCertificates(address student) external view returns (uint256[] memory) {
