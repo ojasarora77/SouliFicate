@@ -26,7 +26,7 @@ export default function SBTCertificates() {
   
   // File upload state
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
-  const [uploadingFile, setUploadingFile] = useState(false);
+  const [uploadingFile] = useState(false);
   
   // Success message state
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);

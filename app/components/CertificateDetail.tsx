@@ -2,8 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
-import { useWalletClient, useAccount } from 'wagmi';
+import { useAccount } from 'wagmi';
 import CertificateMetadata, { CertificateMetadataType } from './CertificateMetadata';
 
 interface CertificateDetailProps {
@@ -21,9 +20,8 @@ export default function CertificateDetail({
   onBurn,
   isOwner
 }: CertificateDetailProps) {
-  const { data: walletClient } = useWalletClient();
   const { address } = useAccount();
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [actionInProgress, setActionInProgress] = useState(false);
   const [metadata, setMetadata] = useState<CertificateMetadataType | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<'preview' | 'metadata'>('preview');
