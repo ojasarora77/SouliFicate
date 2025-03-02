@@ -81,6 +81,7 @@ export default function SBTCertificates() {
   };
 
   return (
+    
     <div className="p-6 max-w-4xl mx-auto w-full">
       <h2 className="text-2xl font-bold mb-4">University Certificates</h2>
       
