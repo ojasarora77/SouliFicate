@@ -1,3 +1,4 @@
 {
-    "eth-abi-interactive.privateKeysFile": "/Users/ojasarora/.eth-abi-interactive/keys.json"
+    "eth-abi-interactive.privateKeysFile": "/Users/ojasarora/.eth-abi-interactive/keys.json",
+    "eth-abi-interactive.nodeURI": "http://localhost:3000/"
 }

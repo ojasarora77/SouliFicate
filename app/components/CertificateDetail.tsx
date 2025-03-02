@@ -23,6 +23,18 @@ export default function CertificateDetail({
   const [loading, setLoading] = useState(false);
   const [actionInProgress, setActionInProgress] = useState(false);
 
+  // Get certificate document from storage
+  const [certificateUrl, setCertificateUrl] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Import is inside useEffect to avoid SSR issues
+    import('../services/certificateStorage').then(module => {
+      const certificateStorage = module.default;
+      const url = certificateStorage.getCertificate(tokenId);
+      setCertificateUrl(url);
+    });
+  }, [tokenId]);
+
   // Handle approve action
   const handleApprove = async () => {
     setActionInProgress(true);
@@ -48,7 +60,7 @@ export default function CertificateDetail({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold">Certificate Details</h3>
           <button
@@ -72,6 +84,53 @@ export default function CertificateDetail({
             </span>
           </div>
 
+          {/* Certificate Document Preview */}
+          <div className="mb-4 bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden">
+            {certificateUrl ? (
+              <div className="aspect-[16/9] relative">
+                {certificateUrl.startsWith('data:image/') ? (
+                  <img 
+                    src={certificateUrl} 
+                    alt="Certificate Document" 
+                    className="w-full h-full object-contain"
+                  />
+                ) : certificateUrl.startsWith('data:application/pdf') ? (
+                  <iframe 
+                    src={certificateUrl} 
+                    className="w-full h-full" 
+                    title="Certificate PDF"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p>Preview not available</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="aspect-[16/9] flex items-center justify-center">
+                <div className="text-center p-6">
+                  <svg 
+                    className="mx-auto h-12 w-12 text-gray-400" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="1" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  >
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <rect x="8" y="12" width="8" height="6"/>
+                  </svg>
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    No certificate document uploaded
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg mb-4">
             <div className="flex flex-col space-y-2">
               <div className="flex justify-between">
@@ -85,6 +144,10 @@ export default function CertificateDetail({
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Transferable:</span>
                 <span>No (Soulbound)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Issue Date:</span>
+                <span>{new Date().toLocaleDateString()}</span>
               </div>
             </div>
           </div>

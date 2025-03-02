@@ -1,64 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useWalletClient, useAccount } from 'wagmi';
 import { ethers } from 'ethers';
+import contractArtifact from '/Users/ojasarora/SouliFicate/artifacts/app/contracts/sbt.sol/SBT.json';
 
 // SBT contract ABI 
-const SBT_ABI = [
-  {
-    "inputs": [{"internalType": "address", "name": "initialOwner", "type": "address"}],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
-    "inputs": [{"internalType": "address", "name": "student", "type": "address"}],
-    "name": "mint",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
-    "name": "approveCertificate",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
-    "name": "burn",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "address", "name": "student", "type": "address"}],
-    "name": "studentCertificates",
-    "outputs": [{"internalType": "uint256[]", "name": "", "type": "uint256[]"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
-    "name": "ownerOf",
-    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "owner",
-    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "address", "name": "owner", "type": "address"}],
-    "name": "balanceOf",
-    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  }
-];
+const SBT_ABI = contractArtifact.abi;
 
 // Get contract address from environment variable or use a fallback for development
 const SBT_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_SBT_CONTRACT_ADDRESS || "YOUR_CONTRACT_ADDRESS_HERE";
@@ -71,16 +17,18 @@ export function useSBTContract() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  
+  // Create contract instance
   const getContract = useCallback(() => {
     if (!walletClient) return null;
     
+    // Create a new provider using the walletClient's transport
     const provider = new ethers.BrowserProvider(walletClient.transport);
-
+    
+    // Create a contract instance
     return new ethers.Contract(SBT_CONTRACT_ADDRESS, SBT_ABI, provider);
   }, [walletClient]);
 
-  // to check if current user is the contract owner
+  // Check if current user is the contract owner
   const checkOwnership = useCallback(async () => {
     try {
       if (!address || !walletClient) return;
@@ -88,7 +36,7 @@ export function useSBTContract() {
       const contract = getContract();
       if (!contract) return;
       
-      // returns the contract owner
+      // Get the contract owner
       const owner = await contract.owner();
       setIsOwner(owner.toLowerCase() === address.toLowerCase());
     } catch (err) {
@@ -100,24 +48,40 @@ export function useSBTContract() {
   // Fetch student certificates
   const fetchCertificates = useCallback(async () => {
     try {
-      if (!address || !walletClient) return;
+      if (!address || !walletClient) return [];
       
       setLoading(true);
       const contract = getContract();
-      if (!contract) return;
+      if (!contract) return [];
       
-      // Call the studentCertificates function
-      const certs = await contract.studentCertificates(address);
-      setCertificates(certs.map((c: any) => Number(c)));
+      try {
+        // Call the studentCertificates function
+        const certs = await contract.studentCertificates(address);
+        const certArray = certs.map((c: any) => Number(c));
+        setCertificates(certArray);
+        setLoading(false);
+        return certArray;
+      } catch (error: unknown) {
+        console.warn("Error getting certificates, might be empty:", error);
+        // Assume no certificates if we get a BAD_DATA error
+        const err = error as any; // Type assertion
+        if (err.code === 'BAD_DATA' && err.value === '0x') {
+          setCertificates([]);
+          return [];
+        } else {
+          throw error; // re-throw if it's a different error
+        }
+      }
+    } catch (error: unknown) {
+      console.error("Error fetching certificates:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      setError(`Failed to fetch certificates: ${errorMessage}`);
       setLoading(false);
-    } catch (err) {
-      console.error("Error fetching certificates:", err);
-      setError("Failed to fetch certificates");
-      setLoading(false);
+      return [];
     }
   }, [address, walletClient, getContract]);
 
-  // Mint a new certificate (owner only i.e the university address: contract deployer by defualt)
+  // Mint a new certificate (owner only)
   const mintCertificate = useCallback(async (studentAddress: string) => {
     try {
       if (!walletClient || !isOwner) return false;
@@ -136,7 +100,7 @@ export function useSBTContract() {
     }
   }, [walletClient, isOwner]);
 
-  // Approve a certificate by the university address 
+  // Approve a certificate
   const approveCertificate = useCallback(async (tokenId: number) => {
     try {
       if (!walletClient || !address) return false;

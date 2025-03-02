@@ -3,6 +3,8 @@
 
 import { useState } from 'react';
 import { useSBTContract } from '../hooks/useSBTContract';
+import CertificateUpload from './CertificateUpload';
+import CertificatePreview from './CertificatePreview';
 import CertificateDetail from './CertificateDetail';
 
 export default function SBTCertificates() {
@@ -21,6 +23,10 @@ export default function SBTCertificates() {
   const [mintLoading, setMintLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<{[key: number]: boolean}>({});
   const [selectedCertificate, setSelectedCertificate] = useState<number | null>(null);
+  
+  // File upload state
+  const [certificateFile, setCertificateFile] = useState<File | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   // Handle minting certificate
   const handleMint = async (e: React.FormEvent) => {
@@ -29,10 +35,38 @@ export default function SBTCertificates() {
     
     setMintLoading(true);
     try {
+      // Mint the certificate on-chain
       const success = await mintCertificate(studentAddress);
+      
       if (success) {
+        // Store certificate document if uploaded
+        if (certificateFile) {
+          setUploadingFile(true);
+          try {
+            // Simulate uploading delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Get the last token ID (this would need to be handled differently in a real app)
+            const updatedCertificates = await refreshCertificates();
+            if (updatedCertificates && updatedCertificates.length > 0) {
+              const lastTokenId = updatedCertificates[updatedCertificates.length - 1];
+              
+              // Import storage dynamically to avoid SSR issues
+              const certificateStorageModule = await import('../services/certificateStorage');
+              const certificateStorage = certificateStorageModule.default;
+              
+              // Store the certificate
+              await certificateStorage.storeCertificate(lastTokenId, certificateFile);
+            }
+          } catch (error) {
+            console.error("Error storing certificate document:", error);
+          } finally {
+            setUploadingFile(false);
+          }
+        }
+        
         setStudentAddress('');
-        refreshCertificates();
+        setCertificateFile(null);
       }
     } finally {
       setMintLoading(false);
@@ -65,6 +99,11 @@ export default function SBTCertificates() {
     }
   };
 
+  // Handle file upload
+  const handleFileUpload = (file: File) => {
+    setCertificateFile(file);
+  };
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold mb-6">University Certificates</h2>
@@ -94,9 +133,26 @@ export default function SBTCertificates() {
                 required
               />
             </div>
+            
+            {/* Certificate Upload Section */}
+            <div>
+              <label className="block mb-2">
+                Certificate Document (Optional)
+              </label>
+              <CertificateUpload 
+                onFileUpload={handleFileUpload} 
+                isUploading={uploadingFile}
+              />
+            </div>
+            
+            {/* Certificate Preview */}
+            {certificateFile && (
+              <CertificatePreview file={certificateFile} />
+            )}
+            
             <button
               type="submit"
-              disabled={mintLoading}
+              disabled={mintLoading || !studentAddress}
               className="inline-flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
               {mintLoading ? 'Processing...' : 'Mint Certificate'}
@@ -126,6 +182,24 @@ export default function SBTCertificates() {
                   <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 rounded-full">
                     Soulbound
                   </span>
+                </div>
+                
+                {/* Certificate Image Placeholder */}
+                <div className="aspect-[4/3] mb-4 bg-gray-100 dark:bg-gray-800 flex items-center justify-center rounded overflow-hidden">
+                  <svg 
+                    className="h-16 w-16 text-gray-400" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="1" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  >
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <rect x="8" y="12" width="8" height="6"/>
+                  </svg>
                 </div>
                 
                 <div className="mb-4">
@@ -167,17 +241,18 @@ export default function SBTCertificates() {
                 </div>
               </div>
             ))}
-            
-            {selectedCertificate !== null && (
-              <CertificateDetail
-                tokenId={selectedCertificate}
-                onClose={() => setSelectedCertificate(null)}
-                onApprove={handleApprove}
-                onBurn={isOwner ? handleBurn : undefined}
-                isOwner={isOwner}
-              />
-            )}
           </div>
+        )}
+        
+        {/* Certificate Detail Modal */}
+        {selectedCertificate !== null && (
+          <CertificateDetail
+            tokenId={selectedCertificate}
+            onClose={() => setSelectedCertificate(null)}
+            onApprove={handleApprove}
+            onBurn={isOwner ? handleBurn : undefined}
+            isOwner={isOwner}
+          />
         )}
       </div>
     </div>
