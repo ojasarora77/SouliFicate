@@ -182,13 +182,28 @@ export default function CertificateView() {
           
           <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
             <h3 className="font-semibold text-lg mb-2">Blockchain Verification</h3>
-            <p className="text-sm mb-4">
-              This certificate is stored as a Soulbound Token (SBT) on the Base blockchain network.
-              SBTs are non-transferable NFTs that represent achievements, credentials, or affiliations.
-            </p>
-            <div className="flex items-center">
-              <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
-              <span className="text-green-600 dark:text-green-400 font-medium">Verified on-chain</span>
+            <div className="flex flex-col md:flex-row items-start gap-6">
+              <div className="flex-grow">
+                <p className="text-sm mb-4">
+                  This certificate is stored as a Soulbound Token (SBT) on the Base blockchain network.
+                  SBTs are non-transferable NFTs that represent achievements, credentials, or affiliations.
+                </p>
+                <div className="flex items-center mb-2">
+                  <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                  <span className="text-green-600 dark:text-green-400 font-medium">Verified on-chain</span>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Contract Address: {process.env.NEXT_PUBLIC_SBT_CONTRACT_ADDRESS}
+                </p>
+              </div>
+              
+              <div className="bg-white p-3 rounded-lg shadow-sm">
+                <div className="mb-2 text-center text-sm font-medium">Scan to Verify</div>
+                {/* We'll replace this with a real QR code component */}
+                <div className="w-32 h-32 bg-gray-100 border flex items-center justify-center">
+                  <p className="text-xs text-gray-500">QR Code</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

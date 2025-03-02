@@ -39,34 +39,10 @@ export default function SBTCertificates() {
       const success = await mintCertificate(studentAddress);
       
       if (success) {
-        // Store certificate document if uploaded
-        if (certificateFile) {
-          setUploadingFile(true);
-          try {
-            // Simulate uploading delay
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Get the last token ID (this would need to be handled differently in a real app)
-            const updatedCertificates = await refreshCertificates();
-            if (updatedCertificates && updatedCertificates.length > 0) {
-              const lastTokenId = updatedCertificates[updatedCertificates.length - 1];
-              
-              // Import storage dynamically to avoid SSR issues
-              const certificateStorageModule = await import('../services/certificateStorage');
-              const certificateStorage = certificateStorageModule.default;
-              
-              // Store the certificate
-              await certificateStorage.storeCertificate(lastTokenId, certificateFile);
-            }
-          } catch (error) {
-            console.error("Error storing certificate document:", error);
-          } finally {
-            setUploadingFile(false);
-          }
-        }
-        
+        // Handle file upload logic here
         setStudentAddress('');
         setCertificateFile(null);
+        refreshCertificates();
       }
     } finally {
       setMintLoading(false);
@@ -105,8 +81,22 @@ export default function SBTCertificates() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">University Certificates</h2>
+    <div className="p-6 max-w-4xl mx-auto w-full">
+      <h2 className="text-2xl font-bold mb-4">University Certificates</h2>
+      
+      {/* Certificate Instructions */}
+      <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+        <h3 className="text-lg font-medium mb-2 text-blue-800 dark:text-blue-300">How Certificates Work</h3>
+        <p className="text-sm mb-2">
+          Your certificates are Soulbound Tokens (SBTs) permanently linked to your wallet address. These tokens cannot be 
+          transferred to other addresses, ensuring the authenticity of your credentials.
+        </p>
+        <p className="text-sm mb-0">
+          <strong>Approving Certificates:</strong> When you click "Approve" on a certificate, you're acknowledging its receipt 
+          and validity. This is a required step before a certificate can be updated or removed by the issuer. To view the full 
+          certificate details and document, click on the certificate card or the "View Full" button.
+        </p>
+      </div>
       
       {error && (
         <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
@@ -174,8 +164,7 @@ export default function SBTCertificates() {
             {certificates.map((tokenId) => (
               <div 
                 key={tokenId} 
-                className="p-4 border border-gray-200 rounded-lg dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => setSelectedCertificate(tokenId)}
+                className="p-4 border border-gray-200 rounded-lg dark:border-gray-700 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-lg font-medium">Certificate #{tokenId}</h4>
@@ -185,7 +174,10 @@ export default function SBTCertificates() {
                 </div>
                 
                 {/* Certificate Image Placeholder */}
-                <div className="aspect-[4/3] mb-4 bg-gray-100 dark:bg-gray-800 flex items-center justify-center rounded overflow-hidden">
+                <div 
+                  onClick={() => setSelectedCertificate(tokenId)}
+                  className="aspect-[4/3] mb-4 bg-gray-100 dark:bg-gray-800 flex items-center justify-center rounded overflow-hidden cursor-pointer"
+                >
                   <svg 
                     className="h-16 w-16 text-gray-400" 
                     xmlns="http://www.w3.org/2000/svg" 
@@ -216,10 +208,7 @@ export default function SBTCertificates() {
                 
                 <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleApprove(tokenId);
-                    }}
+                    onClick={() => handleApprove(tokenId)}
                     disabled={actionLoading[tokenId]}
                     className="py-1 px-3 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
                   >
@@ -228,16 +217,22 @@ export default function SBTCertificates() {
                   
                   {isOwner && (
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleBurn(tokenId);
-                      }}
+                      onClick={() => handleBurn(tokenId)}
                       disabled={actionLoading[tokenId]}
                       className="py-1 px-3 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
                     >
                       {actionLoading[tokenId] ? 'Processing...' : 'Burn'}
                     </button>
                   )}
+                  
+                  <a 
+                    href={`/certificate/${tokenId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-1 px-3 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 rounded hover:bg-blue-200 dark:hover:bg-blue-800 ml-auto"
+                  >
+                    View Full
+                  </a>
                 </div>
               </div>
             ))}
