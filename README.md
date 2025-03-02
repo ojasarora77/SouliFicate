@@ -4,8 +4,6 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-oncha
 
 SouliFicate enables educational institutions to issue tamper-proof, verifiable digital certificates to students. These certificates are minted as Soulbound Tokens (non-transferable NFTs) that remain permanently linked to a student's wallet address, ensuring authenticity and preventing fraud.
 
-![SouliFicate Screenshot](screenshot.png)
-
 ## ✨ Features
 
 - **Soulbound Tokens**: Certificates are issued as non-transferable NFTs, preventing fraud and ensuring authenticity
