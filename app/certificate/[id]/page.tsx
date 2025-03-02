@@ -2,7 +2,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import DemoCertificateView from '/Users/ojasarora/SouliFicate/app/pitch/page';
+import DemoCertificateView from './page';
 
 export default function CertificateView() {
   const params = useParams();

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useWalletClient, useAccount } from 'wagmi';
 import { ethers } from 'ethers';
-import contractArtifact from '/Users/ojasarora/SouliFicate/artifacts/app/contracts/sbt.sol/SBT.json';
+import contractArtifact from '../contracts/artifacts/SBT.json';
 
 // SBT contract ABI 
 const SBT_ABI = contractArtifact.abi;
