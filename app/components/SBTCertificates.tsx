@@ -27,6 +27,10 @@ export default function SBTCertificates() {
   // File upload state
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
+  
+  // Success message state
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [mintedTxHash, setMintedTxHash] = useState('');
 
   // Handle minting certificate
   const handleMint = async (e: React.FormEvent) => {
@@ -43,6 +47,15 @@ export default function SBTCertificates() {
         setStudentAddress('');
         setCertificateFile(null);
         refreshCertificates();
+        
+        // Show success message with dummy tx hash
+        setMintedTxHash("0x6D6Af06FeAac2c0978bDCfFe6c2417E9a2f5a83D");
+        setShowSuccessMessage(true);
+        
+        // Hide success message after 10 seconds
+        setTimeout(() => {
+          setShowSuccessMessage(false);
+        }, 10000);
       }
     } finally {
       setMintLoading(false);
@@ -81,7 +94,6 @@ export default function SBTCertificates() {
   };
 
   return (
-    
     <div className="p-6 max-w-4xl mx-auto w-full">
       <h2 className="text-2xl font-bold mb-4">University Certificates</h2>
       
@@ -98,6 +110,44 @@ export default function SBTCertificates() {
           certificate details and document, click on the certificate card or the "View Full" button.
         </p>
       </div>
+      
+      {/* Mint Success Message */}
+      {showSuccessMessage && (
+        <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 relative">
+          <button 
+            className="absolute top-2 right-2 text-green-700 dark:text-green-300 hover:text-green-900"
+            onClick={() => setShowSuccessMessage(false)}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-6 w-6 text-green-600 dark:text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-md font-medium text-green-800 dark:text-green-300">Certificate Successfully Minted!</h3>
+              <div className="mt-2 text-sm text-green-700 dark:text-green-400">
+                <p className="mb-1">Your certificate has been successfully minted on the blockchain.</p>
+                <p className="font-mono text-xs break-all">Check via smart contract: {mintedTxHash}</p>
+              </div>
+              <div className="mt-3">
+                <a 
+                  href={`https://sepolia.basescan.org/address/${mintedTxHash}`}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium text-green-800 dark:text-green-300 hover:underline"
+                >
+                  View on BaseScan →
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {error && (
         <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
@@ -128,7 +178,7 @@ export default function SBTCertificates() {
             {/* Certificate Upload Section */}
             <div>
               <label className="block mb-2">
-                Certificate Document (Optional)
+                Certificate Document 
               </label>
               <CertificateUpload 
                 onFileUpload={handleFileUpload} 
